@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Data Entry{% endblock %}
+
+
+{% block content %}
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Form Column -->
+            <div class="col-md-4">
+                <h3 align="center">Enter a Set</h3>
+                <form method="POST">
+                    <div class="form-group">
+                        <label for="date">Date</label>
+                        <input 
+                            type="date" 
+                            class="form-control" 
+                            id="date" 
+                            name="date" 
+                            placeholder="Enter date"
+                            value="{{ todaysDate }}" 
+                        />
+
+                        <label for="workout">Workout</label>
+                        <select class="form-control" id="workoutName" name="workoutName">
+                            <option value="" disabled selected>Select a Workout</option>
+                            {% for workout in workout_names %}
+                                <option value="{{ workout }}">{{ workout }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <!-- Weight Input with Toggle for lbs/kgs -->
+                        <label for="weight">Weight</label>
+                        <div class="input-group">
+                            <input 
+                                type="number" 
+                                class="form-control" 
+                                id="weight" 
+                                name="weight" 
+                                placeholder="Enter Weight"
+                            />
+                            <!-- Toggle for lbs / kgs -->
+                            <div class="input-group-append">
+                                <div class="btn-group" role="group" aria-label="Weight Units">
+                                    <label class="btn btn-secondary active">
+                                        <input type="radio" name="weightUnit" value="lbs" checked> lbs
+                                    </label>
+                                    <label class="btn btn-secondary">
+                                        <input type="radio" name="weightUnit" value="kgs"> kgs
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <label for="reps">Repetitions</label>
+                        <input 
+                            type="number" 
+                            class="form-control" 
+                            id="reps" 
+                            name="reps" 
+                            placeholder="Enter Repetitions"
+                        />
+                    </div>
+                    <br />
+                    <button type="submit" class="btn btn-primary">Add Set</button>
+                </form>
+            </div>
+
+            <!-- Exercises Column -->
+            <div class="col-md-8">
+                <h3>Your Exercises</h3>
+                <div class="scrollable-container">
+                    <!-- Iterate through the grouped data -->
+                    {% for dateWorked, exercises_by_name in grouped_data.items() %}
+                        <div class="card mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Date: {{ dateWorked }}</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- Iterate through exercises for this date -->
+                                {% for exerciseName, sets in exercises_by_name.items() %}
+                                    <div class="mb-3">
+                                        <h5>{{ exerciseName }}</h5>
+                                        <!-- Iterate through the sets for this exercise -->
+                                        {% for set in sets %}
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <p>Set: {{ set[0] }} {{ set[2] }} - {{ set[1] }} reps</p>
+
+                                                <div class="btn-group">
+                                                    <!-- Edit Button -->
+                                                    <a href="{{ url_for('views.edit_set_logPage', set_id=set[3]) }}" class="btn btn-warning btn-sm">
+                                                        Edit
+                                                    </a>
+                                                    <!-- Delete Button -->
+                                                    <form action="{{ url_for('views.delete_set_logPage', set_id=set[3]) }}" method="POST" style="display:inline;">
+                                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this set?')">Delete</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

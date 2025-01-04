@@ -1,45 +1,106 @@
-<!--ADD/DELETE WORKOUTS-->
-
 {% extends "base.html" %}
 
-{% block title %}Add/Delete Workouts{% endblock %}
+{% block title %}Add Workout{% endblock %}
 
 {% block content %}
-<form method="POST">
-    <h3 align="center">Enter Exercise Details</h3>
-        <div class="form-group">
-            <label for="date">Workout Name</label>
-            <input 
-                type="text" 
-                class="form-control" 
-                id="workout_name" 
-                name="workout_name" 
-                placeholder="Enter Workout Name"
-                />
+<div class="container mt-4">
+    <div class="row">
+        <!-- Form Column (Left Side) -->
+        <div class="col-md-4">
+            <h3>Add Workout</h3>
+            <form method="POST">
+                <div class="form-group">
+                    <label for="workout_name">Workout Name</label>
+                    <input type="text" class="form-control" id="workout_name" name="workout_name" placeholder="Enter Workout Name" required>
+                </div>
 
-                <label for="workout">Muscle Group</label>
-            <input 
-                type="text" 
-                class="form-control" 
-                id="muscle_group" 
-                name="muscle_group" 
-                placeholder="Enter the muscle worked (i.e: upper chest, side delt)"
-                />
+                <div class="form-group">
+                    <label for="muscles">Muscle Group</label>
+                    <input
+                        id="muscles"
+                        name="muscles"
+                        type="text"
+                        class="form-control"
+                        placeholder="Enter muscle groups (e.g. Chest, Back)"
+                        required
+                    />
+                </div>
+
+                <!-- Hidden input field to store the selected muscle IDs -->
+                <input type="hidden" name="muscles_ids" id="muscles_ids" value="">
+
+                <button type="submit" class="btn btn-primary">Add Exercise</button>
+            </form>
         </div>
-        <br />
-    <button type="submit" class="btn btn-primary">Add Exercise</button>
-</form>
 
-<h3>YOUR EXERCISES</h3>
-<h4>Workout Name | Muscle Group</h4>
-{% for workoutName, muscleGroup in nameList %}
-    <div>
-        <p>
-            {{ workoutName }} - {{ muscleGroup }} |
-            <a href="/">EDIT</a>
-            <a href="{{ url_for('views.delete_exercise', exercise_name=workoutName) }}">DELETE</a>
-        </p>
+        <!-- Exercises Column (Right Side) -->
+        <div class="col-md-8">
+            <h3>Your Exercises</h3>
+
+            <div class="exercise-list" style="max-height: 500px; overflow-y: scroll;">
+                <!-- Iterate through the list of workouts -->
+                {% for workout in nameList %}
+                    <div class="card mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">{{ workout.exercise_name }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Muscle Groups:</strong> {{ workout.muscle_groups }}</p>
+                            
+                            <!-- Buttons for Edit and Delete -->
+                            <div class="btn-group">
+                                <!-- Edit Button -->
+                                <a href="/" class="btn btn-warning btn-sm">
+                                    Edit
+                                </a>
+                                <!-- Delete Button -->
+                                <form action="{{ url_for('views.delete_exercise', exercise_id=workout.exercise_id) }}" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this exercise?')">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
     </div>
-{% endfor %}
+</div>
+
+
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tagify/4.9.1/tagify.min.js"></script>
+<script>
+    // Pass muscle names and IDs from Flask to JS
+    var muscleData = JSON.parse('{{ muscle_names | tojson }}');  // [{name: "Chest", id: 1}, {name: "Back", id: 2}, ...]
+
+    // Initialize Tagify with the whitelist of muscle names from the database
+    var input = document.querySelector('#muscles');
+    var tagify = new Tagify(input, {
+        placeholder: 'Add muscle groups (e.g. Chest, Shoulders)',
+        maxTags: 6,
+        whitelist: muscleData.map(function(muscle) {
+            return {
+                value: muscle.name,  // The displayed name in the input box
+                id: muscle.id        // The associated ID, which will be sent in the form
+            };
+        }),
+        delimiters: ",| ",  // Allowing multi-tags with commas or spaces
+        enforceWhitelist: true,  // Only allow tags from the whitelist
+    });
+
+    // Update hidden input field with selected muscle IDs before form submission
+    var form = document.querySelector('form');
+    form.addEventListener('submit', function() {
+        var selectedMuscles = tagify.value;  // Get the selected muscle tags
+        var muscleIds = selectedMuscles.map(function(tag) {
+            return tag.id;  // Get the ID of each selected muscle
+        });
+        
+        // Set the value of the hidden input to the selected muscle IDs (comma-separated)
+        document.querySelector('#muscles_ids').value = muscleIds.join(',');
+    });
+</script>
 
 {% endblock %}

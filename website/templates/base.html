@@ -14,6 +14,12 @@
             crossorigin="anonymous"
         />
 
+            <!-- Tagify CSS -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tagify/4.9.1/tagify.min.css">
+
+        <!-- Tagify JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tagify/4.9.1/tagify.min.js"></script>
+
         <title>{% block title %}Home{% endblock %}</title>
     </head>
     <body>
@@ -25,9 +31,9 @@
                 <div class ="navbar-nav">
                     {% if user.is_authenticated %}       <!--    If user is logged in  -->
                     <a class="nav-item nav-link" id="home" href="/">Home</a>
-                    <a class="nav-item nav-link" id="logData" href="/logData">Log Data</a>
-                    <a class="nav-item nav-link" id="workout" href="/createWorkout">Create Workout</a>
-                    <a class="nav-item nav-link" id="dataView" href="/viewData">View Data</a>
+                    <a class="nav-item nav-link" id="logData" href="/logData">Add Set</a>
+                    <a class="nav-item nav-link" id="workout" href="/createWorkout">Add Exercise</a>
+                    <a class="nav-item nav-link" id="dataView" href="/viewData">Stats</a>
                     <a class="nav-item nav-link" id="logout" href="/logout">Logout</a>
                     {% else %}          <!--    If user isn't logged in  -->
                     <a class="nav-item nav-link" id="login" href="/login">Login</a>
@@ -78,5 +84,6 @@
             integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
             crossorigin="anonymous"
         ></script>
+        
     </body>
 </html>

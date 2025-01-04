@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required, current_user
 from datetime import date
-from .models import User, Workout, Weight
+from .models import User, Workout, Weight, MuscleGroup, WorkoutMuscle
 from . import db
 from datetime import datetime
 from itertools import groupby
@@ -78,14 +78,14 @@ def viewData():
             formatted_date = exercise.date_worked.strftime('%Y-%m-%d') if exercise.date_worked else ''
             
             # Add the relevant data to workoutList
-            workoutList.append((formatted_date, exercise.exercise_name, exercise.weight, exercise.reps, exercise.units))
+            workoutList.append((formatted_date, exercise.exercise_name, exercise.weight, exercise.reps, exercise.units, exercise.id))
 
     # Sort the setData by date and exercise name
-    workoutList.sort(key=lambda x: (x[0], x[1]))  # Sort by date first, then exercise name
+    workoutList.sort(key=lambda x: (x[0], x[1]), reverse=True)  # Sort by date first, then exercise name
 
     # Group by date
     grouped_data = {}
-    for dateWorked, exerciseName, weight, reps, units in workoutList:
+    for dateWorked, exerciseName, weight, reps, units, id in workoutList:
         if dateWorked not in grouped_data:
             grouped_data[dateWorked] = {}
         if exerciseName not in grouped_data[dateWorked]:
@@ -93,8 +93,9 @@ def viewData():
 
         ## creates variable for string that will be either "kg" or "lb"
         unitString = "lb" if units == 0 else "kg"
+        setId = id
 
-        grouped_data[dateWorked][exerciseName].append((weight, reps, unitString))
+        grouped_data[dateWorked][exerciseName].append((weight, reps, unitString, setId))
 
     # Render the template and pass the grouped data and today's date
     return render_template('dataViewer.html', 
@@ -105,7 +106,7 @@ def viewData():
 
 @views.route('/logData', methods=['POST','GET'])   ## decorator
 @login_required
-def dataEntry():
+def logData():
     ##ANCHOR - LOGGING A SET WORKOUT
     if request.method == 'POST':
         workoutName = request.form.get('workoutName')
@@ -134,50 +135,212 @@ def dataEntry():
     workouts = Workout.query.filter_by(user_id=current_user.id).all()
     workout_names = [workout.exercise_name for workout in workouts if workout.exercise_name and workout.exercise_name.strip()]
 
-    return render_template('dataEntry.html', user=current_user, todaysDate=date.today(), workout_names=workout_names)
+    
+    setData = Weight.query.filter_by(user_id=current_user.id).all()
+    workoutList = []
+    for exercise in setData:
+    # Ensure exercise_name exists and is not empty or just spaces
+        if exercise.exercise_name and exercise.exercise_name.strip():
+            # Format the date to only show the date part (YYYY-MM-DD)
+            formatted_date = exercise.date_worked.strftime('%Y-%m-%d') if exercise.date_worked else ''
+            
+            # Add the relevant data to workoutList
+            workoutList.append((formatted_date, exercise.exercise_name, exercise.weight, exercise.reps, exercise.units, exercise.id))
+
+    # Sort the setData by date and exercise name
+    workoutList.sort(key=lambda x: (x[0], x[1]), reverse=True)  # Sort by date first, then exercise name
+
+    # Group by date
+    grouped_data = {}
+    for dateWorked, exerciseName, weight, reps, units, id in workoutList:
+        if dateWorked not in grouped_data:
+            grouped_data[dateWorked] = {}
+        if exerciseName not in grouped_data[dateWorked]:
+            grouped_data[dateWorked][exerciseName] = []
+
+        ## creates variable for string that will be either "kg" or "lb"
+        unitString = "lb" if units == 0 else "kg"
+        setId = id
+
+        grouped_data[dateWorked][exerciseName].append((weight, reps, unitString, setId))
+
+    return render_template('addSet.html', user=current_user, todaysDate=date.today(), workout_names=workout_names, grouped_data=grouped_data)
 
 
-@views.route('/createWorkout', methods=['POST','GET'])   ## decorator
+# @views.route('/createWorkout', methods=['POST','GET'])   ## decorator
+# @login_required
+# def workout():
+#     # ##ANCHOR - ADDING A WORKOUT
+#     # if request.method == 'POST':
+#     #     workoutName = request.form.get('workout_name')
+#     #     muscleGroup = request.form.get('muscle_group')
+
+        
+#     #     workout = Workout.query.filter_by(user_id=current_user.id, exercise_name=workoutName).first()
+
+#     #     if workout:
+#     #         flash("This exercise already exists", category="error")
+#     #     elif not workoutName:
+#     #         flash("Please enter a workout name", category="error")
+#     #     elif not muscleGroup:
+#     #         flash("Please enter a muscle group", category="error")
+#     #     else:
+#     #         new_exercise = Workout(user_id=current_user.id, exercise_name=workoutName,muscle_group=muscleGroup)
+#     #         db.session.add(new_exercise)
+#     #         db.session.commit()
+#     #         flash(f"'{workoutName}' has been added.", category="success")
+
+#     # workouts = Workout.query.filter_by(user_id=current_user.id).all()
+
+#     # workoutList = []
+#     # for workout in workouts:
+#     #     if workout.exercise_name:
+#     #         # Get the list of muscle names associated with the current workout
+#     #         muscles = [wm.muscle.name for wm in workout.muscles]
+            
+#     #         # Append the exercise name along with its associated muscles to the workoutList
+#     #         workoutList.append((workout.exercise_name, ", ".join(muscles)))
+        
+#     # return render_template('workout.html', user=current_user, nameList=workoutList)
+
+#     # Fetch muscle group names from the database
+#     muscle_groups = MuscleGroup.query.all()
+
+#      # Create a list of dictionaries with 'id' and 'name' for each muscle
+#     muscle_names = [{'id': muscle.id, 'name': muscle.name} for muscle in muscle_groups]
+
+#     # If the form is submitted, process the data
+#     if request.method == 'POST':
+#         workout_name = request.form.get('workout_name')
+#         muscles_input = request.form.get('muscles')  # This will contain the comma-separated tags
+#         print(muscles_input)
+
+#         # Process form submission (save to DB or perform other logic)
+#         # For example, split and save the muscles
+#         muscles_list = [muscle.strip() for muscle in muscles_input.split(',')]
+
+#         return redirect(url_for('views.workout'))
+
+#     return render_template('workout.html', user=current_user, muscle_names=muscle_names)
+@views.route('/createWorkout', methods=['POST', 'GET'])
 @login_required
 def workout():
-    ##ANCHOR - ADDING A WORKOUT
     if request.method == 'POST':
-        workoutName = request.form.get('workout_name')
-        muscleGroup = request.form.get('muscle_group')
-
+        workout_name = request.form.get('workout_name')
+        muscles_ids_input = request.form.get('muscles_ids')  # Get the comma-separated muscle IDs
         
-        workout = Workout.query.filter_by(user_id=current_user.id, exercise_name=workoutName).first()
-
-        if workout:
-            flash("This exercise already exists", category="error")
-        elif not workoutName:
-            flash("Please enter a workout name", category="error")
-        elif not muscleGroup:
-            flash("Please enter a muscle group", category="error")
+        # Ensure muscles_ids_input is not None and is not empty
+        if muscles_ids_input:
+            muscle_ids = [int(id.strip()) for id in muscles_ids_input.split(',')]  # Convert IDs to integers
         else:
-            new_exercise = Workout(user_id=current_user.id, exercise_name=workoutName,muscle_group=muscleGroup)
-            db.session.add(new_exercise)
-            db.session.commit()
-            flash(f"'{workoutName}' has been added.", category="success")
+            muscle_ids = []
 
+        # Create a new workout entry
+        new_workout = Workout(user_id=current_user.id, exercise_name=workout_name)
+        db.session.add(new_workout)
+        db.session.commit()  # Commit to save the workout
+
+        # Create the association in the WorkoutMuscle table
+        for muscle_id in muscle_ids:
+            workout_muscle = WorkoutMuscle(workout_id=new_workout.id, muscle_group_id=muscle_id)
+            db.session.add(workout_muscle)
+
+        db.session.commit()  # Final commit to save the associations
+
+        flash(f"'{workout_name}' has been added.", category="success")
+        return redirect(url_for('views.workout'))
+
+    # Fetch muscle group names from the database for the form
+    muscle_groups = MuscleGroup.query.all()
+    muscle_names = [{'name': muscle.name, 'id': muscle.id} for muscle in muscle_groups]
+
+    # Query all workouts for the current user
     workouts = Workout.query.filter_by(user_id=current_user.id).all()
 
-    workoutList = []
+    workout_list = []
     for workout in workouts:
-        if workout.exercise_name and workout.muscle_group:
-            workoutList.append((workout.exercise_name, workout.muscle_group))
-        
-    return render_template('workout.html', user=current_user, nameList=workoutList)
+        # Get the muscle groups associated with the current workout
+        muscles = [wm.muscle_group.name for wm in workout.muscles]
 
-
-
-@views.route('/delete_exercise/<exercise_name>', methods=['GET'])
-def delete_exercise(exercise_name):
-    # Assuming you have a Workout model with an 'exercise_name' attribute
-    workout = Workout.query.filter_by(exercise_name=exercise_name).first()  # Find the workout by its name
-
-    if workout:
-        db.session.delete(workout)  # Delete the workout from the database
-        db.session.commit()  # Commit the change to the database
+        # Append the workout name and its associated muscle groups to the list
+        workout_list.append({
+            'exercise_id': workout.id,
+            'exercise_name': workout.exercise_name,
+            'muscle_groups': ", ".join(muscles)  # Join muscle groups with a comma
+        })
     
-    return redirect(url_for('views.workout'))  # Redirect to the page that displays the exercises
+    return render_template('workout.html', user=current_user, muscle_names=muscle_names, nameList=workout_list)
+
+
+@views.route('/delete_exercise/<int:exercise_id>', methods=['POST'])
+@login_required
+def delete_exercise(exercise_id):
+    # Find the workout by its ID and ensure it belongs to the logged-in user
+    workout = Workout.query.filter_by(id=exercise_id, user_id=current_user.id).first()
+
+    # Check if the workout exists
+    if workout:
+        db.session.delete(workout)  # Delete the workout
+        db.session.commit()  # Commit the deletion
+        flash(f"'{workout.exercise_name}' has been deleted.", category="success")
+    else:
+        flash("Workout not found or you don't have permission to delete this workout.", category="error")
+
+    # Redirect back to the workouts list page
+    return redirect(url_for('views.workout'))
+
+
+@views.route('/edit_set/<int:set_id>', methods=['GET', 'POST'])
+@login_required
+def edit_set(set_id):
+    set_to_edit = Weight.query.get_or_404(set_id)
+    
+    if request.method == 'POST':
+        # Get the new values from the form (you will need to create a form for the edit)
+        set_to_edit.reps = request.form['reps']
+        set_to_edit.weight = request.form['weight']
+        db.session.commit()
+        
+        flash("Set updated successfully", "success")
+        return redirect(url_for('views.viewData'))  # Or wherever you want to redirect
+    
+    return render_template('edit_set.html', user=current_user, set=set_to_edit)
+
+@views.route('/edit_set_logPage/<int:set_id>', methods=['GET', 'POST'])
+@login_required
+def edit_set_logPage(set_id):
+    set_to_edit = Weight.query.get_or_404(set_id)
+    
+    if request.method == 'POST':
+        # Get the new values from the form (you will need to create a form for the edit)
+        set_to_edit.reps = request.form['reps']
+        set_to_edit.weight = request.form['weight']
+        db.session.commit()
+        
+        flash("Set updated successfully", "success")
+        return redirect(url_for('views.logData'))  # Or wherever you want to redirect
+    
+    return render_template('edit_set.html', user=current_user, set=set_to_edit)
+
+
+@views.route('/delete_set/<int:set_id>', methods=['POST'])
+@login_required
+def delete_set(set_id):
+    set_to_delete = Weight.query.get_or_404(set_id)
+    
+    db.session.delete(set_to_delete)
+    db.session.commit()
+    
+    flash("Set deleted successfully", "success")
+    return redirect(url_for('views.viewData'))  # Or wherever you want to redirect
+
+@views.route('/delete_set_logPage/<int:set_id>', methods=['POST'])
+@login_required
+def delete_set_logPage(set_id):
+    set_to_delete = Weight.query.get_or_404(set_id)
+    
+    db.session.delete(set_to_delete)
+    db.session.commit()
+    
+    flash("Set deleted successfully", "success")
+    return redirect(url_for('views.logData'))  # Or wherever you want to redirect
