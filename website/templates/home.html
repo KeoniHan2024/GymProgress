@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+        <h1>Welcome, {{ user.first_name }}!</h1>
+        <p>Here's an overview of your fitness journey.</p>
+    </div>
+
+    <!-- Unit Toggle Section -->
+    <div class="unit-toggle-section">
+        <form method="POST" action="{{ url_for('views.home') }}">
+            <label for="unit_select">Choose Unit:</label>
+            <select id="unit_select" name="unit_select" onchange="this.form.submit()">
+                <option value="lbs" {% if unit == 'lbs' %}selected{% endif %}>Pounds (lbs)</option>
+                <option value="kg" {% if unit == 'kg' %}selected{% endif %}>Kilograms (kg)</option>
+            </select>
+        </form>
+    </div>
+
+    <!-- PR Section: Personal Records for Each Exercise -->
+    <div class="pr-section">
+        <h3>Your Personal Records (PRs)</h3>
+        <ul>
+            {% for exercise, pr in pr_data.items() %}
+                <li>
+                    <strong>{{ exercise }}:</strong> 
+                    {{ pr.weight }} {{ pr.unit }} for {{ pr.reps }} reps
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Motivation Section -->
+    <div class="motivation-section">
+        <h3>Keep Pushing Yourself!</h3>
+        <p>Stay consistent, and you'll see amazing results.</p>
+    </div>
+
+    <!-- Button to View Data -->
+    <div class="view-data-button">
+        <a href="{{ url_for('views.viewData') }}" class="btn btn-primary">View Your Workout Data</a>
+    </div>
+</div>
+{% endblock %}

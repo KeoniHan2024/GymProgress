@@ -1,0 +1,45 @@
+<!--ADD/DELETE WORKOUTS-->
+
+{% extends "base.html" %}
+
+{% block title %}Add/Delete Workouts{% endblock %}
+
+{% block content %}
+<form method="POST">
+    <h3 align="center">Enter Exercise Details</h3>
+        <div class="form-group">
+            <label for="date">Workout Name</label>
+            <input 
+                type="text" 
+                class="form-control" 
+                id="workout_name" 
+                name="workout_name" 
+                placeholder="Enter Workout Name"
+                />
+
+                <label for="workout">Muscle Group</label>
+            <input 
+                type="text" 
+                class="form-control" 
+                id="muscle_group" 
+                name="muscle_group" 
+                placeholder="Enter the muscle worked (i.e: upper chest, side delt)"
+                />
+        </div>
+        <br />
+    <button type="submit" class="btn btn-primary">Add Exercise</button>
+</form>
+
+<h3>YOUR EXERCISES</h3>
+<h4>Workout Name | Muscle Group</h4>
+{% for workoutName, muscleGroup in nameList %}
+    <div>
+        <p>
+            {{ workoutName }} - {{ muscleGroup }} |
+            <a href="/">EDIT</a>
+            <a href="{{ url_for('views.delete_exercise', exercise_name=workoutName) }}">DELETE</a>
+        </p>
+    </div>
+{% endfor %}
+
+{% endblock %}

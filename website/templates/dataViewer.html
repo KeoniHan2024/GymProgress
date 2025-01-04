@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Data Entry{% endblock %}
+
+{% block content %}
+<h3>YOUR EXERCISES</h3>
+
+
+<!-- Iterate through grouped data -->
+{% for dateWorked, exercises_by_name in grouped_data.items() %}
+    <h4>==== {{ dateWorked }} =====</h4>
+
+    {% for exerciseName, sets in exercises_by_name.items() %}
+        <h5>=== {{ exerciseName }} ===</h5>
+        {% for set in sets %}
+            <p>Set: {{ set[0] }} {{ set[2] }} - {{ set[1] }} reps</p>
+        {% endfor %}
+    {% endfor %}
+{% endfor %}
+
+{% endblock %}
