@@ -14,6 +14,20 @@
                     <input type="text" class="form-control" id="workout_name" name="workout_name" placeholder="Enter Workout Name" required>
                 </div>
 
+                <!-- <div class="input-group-append">
+                    <div class="btn-group" role="group" aria-label="Workout Type">
+                        <label class="btn btn-secondary active">
+                            <input type="radio" name="workout-type" value="weight" checked> Weight
+                        </label>
+                        <label class="btn btn-secondary">
+                            <input type="radio" name="workout-type" value="time"> Time
+                        </label>
+                        <label class="btn btn-secondary">
+                            <input type="radio" name="workout-type" value="distance"> Distance
+                        </label>
+                    </div>
+                </div> -->
+
                 <div class="form-group">
                     <label for="muscles">Muscle Group</label>
                     <input
@@ -21,10 +35,11 @@
                         name="muscles"
                         type="text"
                         class="form-control"
-                        placeholder="Enter muscle groups (e.g. Chest, Back)"
-                        required
+                        placeholder="Enter muscle group(s) or put cardio"
                     />
                 </div>
+
+                
 
                 <!-- Hidden input field to store the selected muscle IDs -->
                 <input type="hidden" name="muscles_ids" id="muscles_ids" value="">

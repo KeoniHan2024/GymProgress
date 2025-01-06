@@ -93,7 +93,8 @@ def create_database(app):
                     # CORE
                     'Core',
                     'Obliques',
-                    'Hip Flexors'
+                    'Hip Flexors',
+                    'Cardio'
                 ]
 
                 # Create MuscleGroup objects and add them to the session

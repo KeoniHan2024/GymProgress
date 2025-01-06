@@ -4,8 +4,6 @@ from datetime import date
 from .models import User, Workout, Weight, MuscleGroup, WorkoutMuscle
 from . import db
 from datetime import datetime
-from itertools import groupby
-from operator import itemgetter
 from sqlalchemy import case
 
 views = Blueprint('views', __name__)
@@ -228,6 +226,7 @@ def workout():
     if request.method == 'POST':
         workout_name = request.form.get('workout_name')
         muscles_ids_input = request.form.get('muscles_ids')  # Get the comma-separated muscle IDs
+        # workout_type = request.form.get('workout-type')  # Get the comma-separated muscle IDs
         
         # Ensure muscles_ids_input is not None and is not empty
         if muscles_ids_input:
