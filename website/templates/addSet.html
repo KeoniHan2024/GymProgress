@@ -22,7 +22,7 @@
                         />
 
                         <label for="workout">Workout</label>
-                        <select class="form-control" id="workoutName" name="workoutName">
+                        <select class="form-control" id="workoutName" name="workoutName" required>
                             <option value="" disabled selected>Select a Workout</option>
                             {% for workout in workout_names %}
                                 <option value="{{ workout }}">{{ workout }}</option>
@@ -38,6 +38,7 @@
                                 id="weight" 
                                 name="weight" 
                                 placeholder="Enter Weight"
+                                required
                             />
                             <!-- Toggle for lbs / kgs -->
                             <div class="input-group-append">
@@ -59,6 +60,7 @@
                             id="reps" 
                             name="reps" 
                             placeholder="Enter Repetitions"
+                            required
                         />
                     </div>
                     <br />
