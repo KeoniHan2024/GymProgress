@@ -71,7 +71,48 @@
             <!-- Exercises Column -->
             <div class="col-md-8">
                 <h3>Your Exercises</h3>
+                
+
+
                 <div class="scrollable-container">
+                    <div class="exercise-list" style="max-height: 500px; overflow-y: scroll;">
+                        <!-- Filter Form -->
+                    <!-- Filter Form -->
+                    <form action="{{ url_for('views.filtered_exercises') }}" method="GET" class="mb-4">
+                        <div class="row">
+                            <!-- Filter Type Selector -->
+                            <div class="col-md-4">
+                                <label for="filterType" class="form-label">Filter By</label>
+                                <select id="filterType" name="filterType" class="form-select" onchange="toggleFilterFields()">
+                                    <option value="dateRange" {% if request.args.get('filterType') == 'dateRange' %}selected{% endif %}>Date Range</option>
+                                    <option value="exerciseName" {% if request.args.get('filterType') == 'exerciseName' %}selected{% endif %}>Exercise Name</option>
+                                </select>
+                            </div>
+                    
+                            <!-- Start Date -->
+                            <div id="startDateField" class="col-md-4" style="display: {% if request.args.get('filterType') == 'dateRange' %}block{% else %}none{% endif %};">
+                                <label for="startDate" class="form-label">Start Date</label>
+                                <input type="date" id="startDate" name="startDate" class="form-control" value="{{ request.args.get('startDate') }}">
+                            </div>
+                    
+                            <!-- End Date -->
+                            <div id="endDateField" class="col-md-4" style="display: {% if request.args.get('filterType') == 'dateRange' %}block{% else %}none{% endif %};">
+                                <label for="endDate" class="form-label">End Date</label>
+                                <input type="date" id="endDate" name="endDate" class="form-control" value="{{ request.args.get('endDate') }}">
+                            </div>
+                    
+                            <!-- Exercise Name Filter -->
+                            <div id="exerciseNameField" class="col-md-4" style="display: {% if request.args.get('filterType') == 'exerciseName' %}block{% else %}none{% endif %};">
+                                <label for="exerciseName" class="form-label">Exercise Name</label>
+                                <input type="text" id="exerciseName" name="exerciseName" class="form-control" value="{{ request.args.get('exerciseName') }}">
+                            </div>
+                    
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-primary mt-4">Filter</button>
+                            </div>
+                        </div>
+                    </form>
+
                     <!-- Iterate through the grouped data -->
                     {% for dateWorked, exercises_by_name in grouped_data.items() %}
                         <div class="card mb-3">
@@ -105,8 +146,30 @@
                             </div>
                         </div>
                     {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+
+    <script>
+        // JavaScript function to toggle between the filters
+        function toggleFilterFields() {
+            var filterType = document.getElementById('filterType').value;
+            
+            if (filterType === 'dateRange') {
+                document.getElementById('startDateField').style.display = 'block';
+                document.getElementById('endDateField').style.display = 'block';
+                document.getElementById('exerciseNameField').style.display = 'none';
+            } else {
+                document.getElementById('startDateField').style.display = 'none';
+                document.getElementById('endDateField').style.display = 'none';
+                document.getElementById('exerciseNameField').style.display = 'block';
+            }
+        }
+    
+        // Trigger toggleFilterFields to ensure the correct fields are shown when the page loads
+        window.onload = toggleFilterFields;
+    </script>
 {% endblock %}

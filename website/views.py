@@ -5,6 +5,7 @@ from .models import User, Workout, Weight, MuscleGroup, WorkoutMuscle
 from . import db
 from datetime import datetime
 from sqlalchemy import case
+from collections import defaultdict
 
 views = Blueprint('views', __name__)
 
@@ -343,3 +344,158 @@ def delete_set_logPage(set_id):
     
     flash("Set deleted successfully", "success")
     return redirect(url_for('views.logData'))  # Or wherever you want to redirect
+
+
+@views.route('/filtered_exercises', methods=['GET'])
+@login_required
+def filtered_exercises():
+    # Retrieve filter type from request arguments
+    filter_type = request.args.get('filterType')
+
+    # Initialize an empty list to store the filtered data
+    grouped_data = []
+
+    if filter_type == 'dateRange':
+        # Retrieve start and end dates from the request
+        start_date = request.args.get('startDate')
+        end_date = request.args.get('endDate')
+        
+        # Validate that both start and end dates are provided
+        if start_date and end_date:
+            # Call a function to fetch data filtered by the date range
+            grouped_data = get_exercises_by_date_range(start_date, end_date)
+        else:
+            # Handle the case where dates are missing
+            grouped_data = get_all_exercises()  # Fetch all data or handle as needed
+    
+    elif filter_type == 'exerciseName':
+        # Retrieve the exercise name from the request
+        exercise_name = request.args.get('exerciseName')
+        
+        print(exercise_name)
+        
+        if exercise_name:
+            # Call a function to fetch data filtered by exercise name
+            grouped_data = get_exercises_by_name(exercise_name)
+        else:
+            # Handle the case where no exercise name is provided
+            grouped_data = get_all_exercises()  # Fetch all data or handle as needed
+    
+    else:
+        # If no filter is selected, fetch all exercises
+        grouped_data = get_all_exercises()
+
+    return render_template('addSet.html', user=current_user, todaysDate=date.today(), grouped_data=grouped_data)
+
+
+
+
+def get_exercises_by_date_range(startDate, endDate):
+    # Query items between the date range for the current user
+    workoutList = Weight.query.filter(
+        Weight.date_worked.between(startDate, endDate),
+        Weight.user_id == current_user.id
+    ).all()
+
+    # Group by date
+    grouped_data = {}
+    
+    for workout in workoutList:
+        # Access the attributes of the Weight model using dot notation
+        dateWorked = workout.date_worked  # 'date_worked' attribute
+        exerciseName = workout.exercise_name  # 'exercise_name' attribute
+        weight = workout.weight  # 'weight' attribute
+        reps = workout.reps  # 'reps' attribute
+        units = workout.units  # 'units' attribute
+        id = workout.id  # 'id' attribute
+
+        # Group by dateWorked
+        if dateWorked not in grouped_data:
+            grouped_data[dateWorked] = {}
+        
+        # Group by exerciseName within each dateWorked
+        if exerciseName not in grouped_data[dateWorked]:
+            grouped_data[dateWorked][exerciseName] = []
+
+        # Create unit string based on units (0 for lb, 1 for kg)
+        unitString = "lb" if units == 0 else "kg"
+        
+        # Append the data as a tuple (weight, reps, unitString, setId)
+        grouped_data[dateWorked][exerciseName].append((weight, reps, unitString, id))
+    
+    return grouped_data
+
+def get_all_exercises():
+    # Fetch all workout names for the current user and filter out None or empty names
+    workouts = Workout.query.filter_by(user_id=current_user.id).all()
+    workout_names = [workout.exercise_name for workout in workouts if workout.exercise_name and workout.exercise_name.strip()]
+
+    
+    setData = Weight.query.filter_by(user_id=current_user.id).all()
+    workoutList = []
+    for exercise in setData:
+    # Ensure exercise_name exists and is not empty or just spaces
+        if exercise.exercise_name and exercise.exercise_name.strip():
+            # Format the date to only show the date part (YYYY-MM-DD)
+            formatted_date = exercise.date_worked.strftime('%Y-%m-%d') if exercise.date_worked else ''
+            
+            # Add the relevant data to workoutList
+            workoutList.append((formatted_date, exercise.exercise_name, exercise.weight, exercise.reps, exercise.units, exercise.id))
+
+    # Sort the setData by date and exercise name
+    workoutList.sort(key=lambda x: (x[0], x[1]), reverse=True)  # Sort by date first, then exercise name
+
+    # Group by date
+    grouped_data = {}
+    for dateWorked, exerciseName, weight, reps, units, id in workoutList:
+        if dateWorked not in grouped_data:
+            grouped_data[dateWorked] = {}
+        if exerciseName not in grouped_data[dateWorked]:
+            grouped_data[dateWorked][exerciseName] = []
+
+        ## creates variable for string that will be either "kg" or "lb"
+        unitString = "lb" if units == 0 else "kg"
+        setId = id
+
+        grouped_data[dateWorked][exerciseName].append((weight, reps, unitString, setId))
+
+    return grouped_data
+
+
+def get_exercises_by_name(name):
+    # Query all workouts for the current user where exercise_name contains the given name (case-insensitive)
+    workoutList = Weight.query.filter(
+        Weight.user_id == current_user.id, 
+        Weight.exercise_name.ilike(f'%{name}%')  # This searches for partial matches
+    ).all()
+
+    # Group by exercise_name and date_worked (dictionary format)
+    grouped_data = {}
+
+    for workout in workoutList:
+        # Access the attributes of the Weight model using dot notation
+        dateWorked = workout.date_worked  # 'date_worked' attribute
+        exerciseName = workout.exercise_name  # 'exercise_name' attribute
+        weight = workout.weight  # 'weight' attribute
+        reps = workout.reps  # 'reps' attribute
+        units = workout.units  # 'units' attribute
+        id = workout.id  # 'id' attribute
+
+        # First, group by dateWorked
+        if dateWorked not in grouped_data:
+            grouped_data[dateWorked] = {}
+
+        # Then, group by exerciseName within each date
+        if exerciseName not in grouped_data[dateWorked]:
+            grouped_data[dateWorked][exerciseName] = []
+
+        # Create unit string based on units (0 for lb, 1 for kg)
+        unitString = "lb" if units == 0 else "kg"
+
+        # Append the data as a tuple (weight, reps, unitString, setId)
+        grouped_data[dateWorked][exerciseName].append((weight, reps, unitString, id))
+
+    return grouped_data
+
+
+

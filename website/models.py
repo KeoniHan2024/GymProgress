@@ -23,17 +23,7 @@ class Weight(db.Model):
     units = db.Column(db.Integer, nullable=False)     ## 0 lbs -- 1 kgs
     reps = db.Column(db.Integer, nullable=False)
 
-    # For weight-based exercises (e.g., sets, reps, weight)
-    # weight = db.Column(db.Float, nullable=True)
-    # reps = db.Column(db.Integer, nullable=True)
-    # sets = db.Column(db.Integer, nullable=True)
-    # units = db.Column(db.Integer, nullable=True)  # 0 = lbs, 1 = kgs
-    
-    # For time-based exercises (e.g., duration in seconds)
-    # duration_seconds = db.Column(db.Integer, nullable=True)  # Time-based workouts
-    
-    # # For distance-based exercises (e.g., distance in meters or kilometers)
-    # distance = db.Column(db.Float, nullable=True)  # Distance in meters or kilometers
+    workout_id = db.Column(db.Integer, db.ForeignKey('workout.id', ondelete='CASCADE'))
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
